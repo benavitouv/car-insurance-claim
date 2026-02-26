@@ -16,14 +16,12 @@ const formatBytes = (bytes) => {
   return `${value.toFixed(value >= 10 || exponent === 0 ? 0 : 1)} ${units[exponent]}`;
 };
 
-const setupDropZone = (dropZone, fileInput, fileNameEl, fileSizeEl, { multiple = false, emptyText = 'No file selected' } = {}) => {
+const setupDropZone = (dropZone, fileInput, fileNameEl, fileSizeEl, { multiple = false, emptyText = 'No file selected', onFilesChange = null } = {}) => {
   const updateMeta = (files) => {
     if (!files || files.length === 0) {
       fileNameEl.textContent = emptyText;
       fileSizeEl.textContent = '—';
-      return;
-    }
-    if (files.length === 1) {
+    } else if (files.length === 1) {
       fileNameEl.textContent = files[0].name;
       fileSizeEl.textContent = formatBytes(files[0].size);
     } else {
@@ -31,6 +29,7 @@ const setupDropZone = (dropZone, fileInput, fileNameEl, fileSizeEl, { multiple =
       fileNameEl.textContent = `${files.length} photos selected`;
       fileSizeEl.textContent = formatBytes(totalSize);
     }
+    if (onFilesChange) onFilesChange(files);
   };
 
   fileInput.addEventListener('change', () => updateMeta(fileInput.files));
@@ -74,12 +73,34 @@ const updatePolicyMeta = setupDropZone(
   { multiple: false, emptyText: 'No file selected' }
 );
 
+const evidencePreviewsEl = document.querySelector('#evidence-previews');
+let evidenceObjectURLs = [];
+
+const renderEvidencePreviews = (files) => {
+  evidenceObjectURLs.forEach((url) => URL.revokeObjectURL(url));
+  evidenceObjectURLs = [];
+  evidencePreviewsEl.innerHTML = '';
+  if (!files || files.length === 0) return;
+  Array.from(files).forEach((file) => {
+    if (!file.type.startsWith('image/')) return;
+    const url = URL.createObjectURL(file);
+    evidenceObjectURLs.push(url);
+    const item = document.createElement('div');
+    item.className = 'preview-item';
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = file.name;
+    item.appendChild(img);
+    evidencePreviewsEl.appendChild(item);
+  });
+};
+
 const updateEvidenceMeta = setupDropZone(
   document.querySelector('#drop-zone-evidence'),
   evidenceFileInput,
   document.querySelector('#evidence-file-name'),
   document.querySelector('#evidence-file-size'),
-  { multiple: true, emptyText: 'No photos selected' }
+  { multiple: true, emptyText: 'No photos selected', onFilesChange: renderEvidencePreviews }
 );
 
 const setStatus = (type, message) => {
