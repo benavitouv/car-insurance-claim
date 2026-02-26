@@ -212,6 +212,14 @@ form.addEventListener('submit', async (event) => {
     return;
   }
 
+  // Fire real submission to trigger the webhook (fire-and-forget)
+  const fd = new FormData();
+  fd.append('full_name', (form.querySelector('[name="full_name"]')?.value || '').trim());
+  fd.append('email', (form.querySelector('[name="email"]')?.value || '').trim());
+  fd.append('policy_certificate', policyFileInput.files[0]);
+  evidenceFiles.forEach((f) => fd.append('claim_file', f));
+  fetch('/api/submit', { method: 'POST', body: fd }).catch(() => {});
+
   submitBtn.disabled = true;
   form.classList.add('is-loading');
   showModal(processingModal);
