@@ -225,15 +225,16 @@ form.addEventListener('submit', async (event) => {
   const emailValue = (form.querySelector('[name="email"]')?.value || '').trim();
   const hasDot = emailValue.split('@')[0].includes('.');
 
+  form.reset();
+  updatePolicyMeta(null);
+  clearEvidenceFiles();
+
   if (hasDot) {
     errorMessage.textContent =
       'Our records indicate the vehicle was struck from behind, but only a front-facing photo was provided. Please attach the correct evidence and resubmit.';
     showModal(errorModal);
   } else {
     caseIdDisplay.textContent = MOCK_CASE_ID;
-    form.reset();
-    updatePolicyMeta(null);
-    clearEvidenceFiles();
     showSuccessModal();
   }
 });
