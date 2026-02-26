@@ -96,8 +96,6 @@ const uploadAttachment = async (file) => {
 };
 
 const triggerWebhook = async ({ email, fullName }) => {
-  const subject = `Car Insurance Claim - ${fullName}`.trim();
-
   const webhookResponse = await fetch(WEBHOOK_URL, {
     method: 'POST',
     headers: {
@@ -109,7 +107,6 @@ const triggerWebhook = async ({ email, fullName }) => {
       task_type: TASK_TYPE,
       payload: {
         customer_email: email,
-        subject,
         customer_name: fullName,
       },
     }),
