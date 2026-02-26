@@ -2,6 +2,10 @@ const form = document.querySelector('#claim-form');
 const statusEl = document.querySelector('#status');
 const statusText = document.querySelector('#status-text');
 const submitBtn = document.querySelector('#submit-btn');
+const processingModal = document.querySelector('#processing-modal');
+const errorModal = document.querySelector('#error-modal');
+const errorMessage = document.querySelector('#error-message');
+const errorClose = document.querySelector('#error-close');
 const successModal = document.querySelector('#success-modal');
 const successClose = document.querySelector('#success-close');
 
@@ -183,15 +187,11 @@ const setStatus = (type, message) => {
   statusText.textContent = message;
 };
 
-const showSuccessModal = () => {
-  successModal.classList.add('is-visible');
-  successModal.setAttribute('aria-hidden', 'false');
-};
+const showModal = (el) => { el.classList.add('is-visible'); el.setAttribute('aria-hidden', 'false'); };
+const hideModal = (el) => { el.classList.remove('is-visible'); el.setAttribute('aria-hidden', 'true'); };
 
-const hideSuccessModal = () => {
-  successModal.classList.remove('is-visible');
-  successModal.setAttribute('aria-hidden', 'true');
-};
+const showSuccessModal = () => showModal(successModal);
+const hideSuccessModal = () => hideModal(successModal);
 
 // ── Submit ────────────────────────────────────────────────────────────────────
 
@@ -201,7 +201,6 @@ const caseIdDisplay = document.querySelector('#case-id-display');
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   setStatus('', '');
-  hideSuccessModal();
 
   if (!policyFileInput.files || policyFileInput.files.length === 0) {
     setStatus('error', 'Please attach your policy certificate before submitting.');
@@ -215,25 +214,23 @@ form.addEventListener('submit', async (event) => {
 
   submitBtn.disabled = true;
   form.classList.add('is-loading');
-  setStatus('info', 'Processing your claim...');
+  showModal(processingModal);
 
   await new Promise((resolve) => setTimeout(resolve, 15000));
 
-  const emailValue = (form.querySelector('[name="email"]')?.value || '').trim();
-  const emailUser = emailValue.split('@')[0];
-  const hasDot = emailUser.includes('.');
-
+  hideModal(processingModal);
   submitBtn.disabled = false;
   form.classList.remove('is-loading');
 
+  const emailValue = (form.querySelector('[name="email"]')?.value || '').trim();
+  const hasDot = emailValue.split('@')[0].includes('.');
+
   if (hasDot) {
-    setStatus(
-      'error',
-      'Claim could not be processed: our records indicate the vehicle was struck from behind, but only a front-facing photo was provided. Please attach the correct evidence and resubmit.'
-    );
+    errorMessage.textContent =
+      'Our records indicate the vehicle was struck from behind, but only a front-facing photo was provided. Please attach the correct evidence and resubmit.';
+    showModal(errorModal);
   } else {
     caseIdDisplay.textContent = MOCK_CASE_ID;
-    setStatus('success', `Claim opened successfully. Your case ID is ${MOCK_CASE_ID}.`);
     form.reset();
     updatePolicyMeta(null);
     clearEvidenceFiles();
@@ -241,7 +238,5 @@ form.addEventListener('submit', async (event) => {
   }
 });
 
-successClose.addEventListener('click', () => {
-  hideSuccessModal();
-  setStatus('', '');
-});
+errorClose.addEventListener('click', () => hideModal(errorModal));
+successClose.addEventListener('click', () => hideSuccessModal());

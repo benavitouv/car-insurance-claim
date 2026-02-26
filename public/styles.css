@@ -358,24 +358,26 @@ input:focus {
   color: #b3301f;
 }
 
-.success-modal {
+/* ── Shared overlay modal ─────────────────────────────────────────────────── */
+
+.overlay-modal {
   position: fixed;
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(30, 64, 175, 0.15);
+  background: rgba(30, 64, 175, 0.18);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease;
   z-index: 10;
 }
 
-.success-modal.is-visible {
+.overlay-modal.is-visible {
   opacity: 1;
   pointer-events: auto;
 }
 
-.success-card {
+.overlay-card {
   width: min(520px, 92vw);
   background: #ffffff;
   border-radius: 26px;
@@ -387,9 +389,94 @@ input:focus {
   transition: transform 0.35s ease;
 }
 
-.success-modal.is-visible .success-card {
+.overlay-modal.is-visible .overlay-card {
   transform: translateY(0) scale(1);
 }
+
+.overlay-card h2 {
+  margin: 0 0 10px;
+  font-size: 1.6rem;
+}
+
+.overlay-card p {
+  margin: 0 0 12px;
+  color: var(--muted);
+}
+
+/* ── Processing modal ─────────────────────────────────────────────────────── */
+
+.processing-spinner-wrap {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 24px;
+  display: grid;
+  place-items: center;
+}
+
+.processing-ring {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 6px solid var(--accent-soft);
+  border-top-color: var(--accent);
+  animation: spin 0.9s linear infinite;
+}
+
+#processing-modal h2 {
+  color: var(--accent-dark);
+}
+
+/* ── Error modal ──────────────────────────────────────────────────────────── */
+
+.error-icon {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 18px;
+  display: grid;
+  place-items: center;
+}
+
+.error-icon svg {
+  width: 140px;
+  height: 140px;
+}
+
+.error-icon circle {
+  stroke: #dc2626;
+  stroke-width: 6;
+  stroke-dasharray: 340;
+  stroke-dashoffset: 340;
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+.error-icon path {
+  stroke: #dc2626;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 54;
+  stroke-dashoffset: 54;
+  transition: stroke-dashoffset 0.35s ease 0.3s;
+}
+
+#error-modal.is-visible .error-icon circle,
+#error-modal.is-visible .error-icon path {
+  stroke-dashoffset: 0;
+}
+
+#error-modal h2 {
+  color: #b91c1c;
+}
+
+.ghost--red {
+  border-color: rgba(185, 28, 28, 0.35);
+  color: #b91c1c;
+}
+
+.ghost--red:hover {
+  box-shadow: 0 10px 18px rgba(185, 28, 28, 0.14);
+}
+
+/* ── Success modal ────────────────────────────────────────────────────────── */
 
 .success-icon {
   width: 140px;
@@ -422,20 +509,13 @@ input:focus {
   transition: stroke-dashoffset 0.6s ease 0.18s;
 }
 
-.success-modal.is-visible .success-icon circle,
-.success-modal.is-visible .success-icon path {
+#success-modal.is-visible .success-icon circle,
+#success-modal.is-visible .success-icon path {
   stroke-dashoffset: 0;
 }
 
-.success-card h2 {
-  margin: 0 0 10px;
-  font-size: 1.6rem;
+#success-modal h2 {
   color: var(--accent-dark);
-}
-
-.success-card p {
-  margin: 0 0 12px;
-  color: var(--muted);
 }
 
 .case-id-line {

@@ -147,8 +147,36 @@
       </p>
     </main>
 
-    <div id="success-modal" class="success-modal" aria-hidden="true">
-      <div class="success-card" role="dialog" aria-modal="true" aria-labelledby="success-title">
+    <!-- Processing modal -->
+    <div id="processing-modal" class="overlay-modal" aria-hidden="true">
+      <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="processing-title">
+        <div class="processing-spinner-wrap" aria-hidden="true">
+          <div class="processing-ring"></div>
+        </div>
+        <h2 id="processing-title">Analyzing Your Claim</h2>
+        <p>Please wait while we review your submission…</p>
+      </div>
+    </div>
+
+    <!-- Error modal -->
+    <div id="error-modal" class="overlay-modal" aria-hidden="true">
+      <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="error-title">
+        <div class="error-icon" aria-hidden="true">
+          <svg viewBox="0 0 120 120" role="presentation">
+            <circle cx="60" cy="60" r="54" fill="none" />
+            <path d="M42 42 L78 78" fill="none" />
+            <path d="M78 42 L42 78" fill="none" />
+          </svg>
+        </div>
+        <h2 id="error-title">Unable to Process Claim</h2>
+        <p id="error-message"></p>
+        <button id="error-close" class="ghost ghost--red" type="button">Try Again</button>
+      </div>
+    </div>
+
+    <!-- Success modal -->
+    <div id="success-modal" class="overlay-modal" aria-hidden="true">
+      <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="success-title">
         <div class="success-icon" aria-hidden="true">
           <svg viewBox="0 0 120 120" role="presentation">
             <circle cx="60" cy="60" r="54" fill="none" />
