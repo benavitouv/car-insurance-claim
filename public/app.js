@@ -195,6 +195,9 @@ const hideSuccessModal = () => {
 
 // ── Submit ────────────────────────────────────────────────────────────────────
 
+const MOCK_CASE_ID = 'INS-435351';
+const caseIdDisplay = document.querySelector('#case-id-display');
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   setStatus('', '');
@@ -212,34 +215,29 @@ form.addEventListener('submit', async (event) => {
 
   submitBtn.disabled = true;
   form.classList.add('is-loading');
-  setStatus('info', 'Uploading files and submitting your claim...');
+  setStatus('info', 'Processing your claim...');
 
-  try {
-    const formData = new FormData(form);
-    formData.delete('claim_file');
-    evidenceFiles.forEach((f) => formData.append('claim_file', f));
+  await new Promise((resolve) => setTimeout(resolve, 15000));
 
-    const response = await fetch('/api/submit', {
-      method: 'POST',
-      body: formData,
-    });
+  const emailValue = (form.querySelector('[name="email"]')?.value || '').trim();
+  const emailUser = emailValue.split('@')[0];
+  const hasDot = emailUser.includes('.');
 
-    const data = await response.json().catch(() => ({}));
+  submitBtn.disabled = false;
+  form.classList.remove('is-loading');
 
-    if (!response.ok || !data.ok) {
-      throw new Error(data?.message || 'An error occurred while submitting your claim.');
-    }
-
-    setStatus('success', 'Claim submitted successfully! Our claims team will be in touch shortly.');
+  if (hasDot) {
+    setStatus(
+      'error',
+      'Claim could not be processed: our records indicate the vehicle was struck from behind, but only a front-facing photo was provided. Please attach the correct evidence and resubmit.'
+    );
+  } else {
+    caseIdDisplay.textContent = MOCK_CASE_ID;
+    setStatus('success', `Claim opened successfully. Your case ID is ${MOCK_CASE_ID}.`);
     form.reset();
     updatePolicyMeta(null);
     clearEvidenceFiles();
     showSuccessModal();
-  } catch (error) {
-    setStatus('error', error instanceof Error ? error.message : 'An unexpected error occurred.');
-  } finally {
-    submitBtn.disabled = false;
-    form.classList.remove('is-loading');
   }
 });
 

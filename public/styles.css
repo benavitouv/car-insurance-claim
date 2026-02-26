@@ -434,8 +434,24 @@ input:focus {
 }
 
 .success-card p {
-  margin: 0 0 20px;
+  margin: 0 0 12px;
   color: var(--muted);
+}
+
+.case-id-line {
+  display: inline-block;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 0.95rem;
+  color: var(--ink);
+  margin-bottom: 20px !important;
+}
+
+.case-id-line strong {
+  color: var(--accent-dark);
+  letter-spacing: 0.04em;
 }
 
 .ghost {
