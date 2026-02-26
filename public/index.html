@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Car Insurance Claim — Auto Claims Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="brand">
+        <div class="logo">
+          <svg viewBox="0 0 80 90" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="80" height="90">
+            <path d="M40 6 L70 18 V44 C70 62 56 76 40 82 C24 76 10 62 10 44 V18 Z" fill="rgba(37,99,235,0.12)" stroke="#2563eb" stroke-width="2.5"/>
+            <path d="M24 52 L27 44 L31 39 L49 39 L53 44 L56 52 Z" fill="#2563eb"/>
+            <rect x="22" y="51" width="36" height="10" rx="3" fill="#2563eb"/>
+            <circle cx="30" cy="64" r="4" fill="#1e40af"/>
+            <circle cx="50" cy="64" r="4" fill="#1e40af"/>
+            <rect x="27" y="40" width="10" height="7" rx="2" fill="rgba(255,255,255,0.75)"/>
+            <rect x="43" y="40" width="10" height="7" rx="2" fill="rgba(255,255,255,0.75)"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <p class="eyebrow">Auto Insurance</p>
+          <h1>Car Insurance Claim</h1>
+          <p class="subhead">
+            Fill in your details, attach your evidence photos, and our claims team will process your request promptly.
+          </p>
+        </div>
+      </header>
+
+      <form
+        id="claim-form"
+        class="card"
+        autocomplete="off"
+        data-lpignore="true"
+        data-1p-ignore="true"
+        data-form-type="other"
+        data-bwignore="true"
+      >
+        <label class="field">
+          <span>Full Name</span>
+          <input
+            type="text"
+            name="full_name"
+            autocomplete="off"
+            data-lpignore="true"
+            data-1p-ignore="true"
+            data-form-type="other"
+            data-bwignore="true"
+            required
+            placeholder="e.g. Jane Smith"
+          />
+        </label>
+
+        <label class="field">
+          <span>Contact Email</span>
+          <input
+            type="email"
+            name="email"
+            autocomplete="off"
+            data-lpignore="true"
+            data-1p-ignore="true"
+            data-form-type="other"
+            data-bwignore="true"
+            required
+            placeholder="name@example.com"
+          />
+        </label>
+
+        <label class="field">
+          <span>Policy Certificate Number</span>
+          <input
+            type="text"
+            name="policy_certificate"
+            autocomplete="off"
+            data-lpignore="true"
+            data-1p-ignore="true"
+            data-form-type="other"
+            data-bwignore="true"
+            required
+            placeholder="e.g. PLY-2024-123456"
+          />
+        </label>
+
+        <div class="field">
+          <span>Evidence Photos</span>
+          <label id="drop-zone" class="drop-zone">
+            <input
+              id="claim_file"
+              name="claim_file"
+              type="file"
+              accept=".jpg,.jpeg,.png,.heic,.webp"
+              multiple
+              required
+            />
+            <div class="drop-content">
+              <div class="drop-icon">⇣</div>
+              <div>
+                <strong>Drag one or more photos here</strong>
+                <p>or click to select multiple photos from your device</p>
+              </div>
+            </div>
+            <div class="file-meta">
+              <span id="file-name">No photos selected</span>
+              <span id="file-size">—</span>
+            </div>
+          </label>
+          <p class="hint">Accepted formats: JPG, PNG, HEIC or WebP. You may upload multiple photos.</p>
+        </div>
+
+        <button id="submit-btn" class="submit" type="submit">
+          <span>Submit Claim</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+
+        <div id="status" class="status" role="status" aria-live="polite">
+          <span class="status-check" aria-hidden="true">
+            <svg viewBox="0 0 52 52" role="presentation">
+              <circle cx="26" cy="26" r="24" fill="none" />
+              <path d="M15 27l8 8 14-16" fill="none" />
+            </svg>
+          </span>
+          <span id="status-text"></span>
+        </div>
+      </form>
+
+      <p class="footnote">
+        Your information is stored securely and forwarded directly to our claims processing team.
+      </p>
+    </main>
+
+    <div id="success-modal" class="success-modal" aria-hidden="true">
+      <div class="success-card" role="dialog" aria-modal="true" aria-labelledby="success-title">
+        <div class="success-icon" aria-hidden="true">
+          <svg viewBox="0 0 120 120" role="presentation">
+            <circle cx="60" cy="60" r="54" fill="none" />
+            <path d="M36 64l16 16 32-36" fill="none" />
+          </svg>
+        </div>
+        <h2 id="success-title">Claim Submitted Successfully</h2>
+        <p>We have received your claim and evidence photos. Our claims team will review and be in touch shortly.</p>
+        <button id="success-close" class="ghost" type="button">Submit Another Claim</button>
+      </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+    <script>
+      (() => {
+        const s = document.createElement('script');
+        s.src = 'https://wonderful.app.demo.wonderful.ai/embed/wonderful-chat.js';
+        s.onload = () => {
+          new window.WonderfulChat({
+            environment: "wonderful.api.demo.wonderful.ai",
+            agentId: "a5141f52-16eb-4255-bdea-d5ca0cb1f8c6",
+
+            // Core settings
+            agentName: 'Claims Assistant',
+            buttonText: 'Chat with an Agent',
+            placeholderText: 'Type your message here...',
+            isRTL: false,
+
+            // Main theme colors
+            primaryColor: '#2563eb',
+            accentColor: '#1e40af',
+            textColor: '#1a1a1a',
+
+            // Chat appearance
+            headerBgColor: '#2563eb',
+            headerTextColor: '#ffffff',
+
+            // Message bubbles
+            userBubbleColor: '#1e40af',
+            userTextColor: '#ffffff',
+            agentBubbleColor: '#eff6ff',
+            agentTextColor: '#1a1a1a',
+
+            // Background colors
+            windowBgColor: '#ffffff',
+            messagesBgColor: '#ffffff',
+            inputBgColor: '#fafafa',
+
+            // Status indicators
+            statusColor: '#2563eb',
+            errorColor: '#d32f2f',
+          });
+        };
+        document.head.appendChild(s);
+      })();
+    </script>
+  </body>
+</html>
