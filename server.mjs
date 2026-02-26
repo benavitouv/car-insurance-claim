@@ -173,10 +173,10 @@ const server = createServer(async (req, res) => {
       const formData = await readBodyAsFormData(req, url);
       const fullName = String(formData.get('full_name') || '').trim();
       const email = String(formData.get('email') || '').trim();
-      const policyCertificate = String(formData.get('policy_certificate') || '').trim();
-      const files = formData.getAll('claim_file').filter((f) => typeof f !== 'string');
+      const policyFile = formData.get('policy_certificate');
+      const evidenceFiles = formData.getAll('claim_file').filter((f) => typeof f !== 'string');
 
-      if (!fullName || !email || !policyCertificate) {
+      if (!fullName || !email) {
         jsonResponse(res, 400, {
           ok: false,
           error: 'missing_fields',
@@ -185,21 +185,34 @@ const server = createServer(async (req, res) => {
         return;
       }
 
-      if (files.length === 0) {
+      if (!policyFile || typeof policyFile === 'string') {
         jsonResponse(res, 400, {
           ok: false,
-          error: 'missing_file',
+          error: 'missing_policy',
+          message: 'Please attach your policy certificate.',
+        });
+        return;
+      }
+
+      if (evidenceFiles.length === 0) {
+        jsonResponse(res, 400, {
+          ok: false,
+          error: 'missing_evidence',
           message: 'Please attach at least one evidence photo.',
         });
         return;
       }
 
-      const attachmentIds = await Promise.all(files.map((f) => uploadAttachment(f)));
+      const [policyAttachmentId, ...evidenceAttachmentIds] = await Promise.all([
+        uploadAttachment(policyFile),
+        ...evidenceFiles.map((f) => uploadAttachment(f)),
+      ]);
       const webhookResult = await triggerWebhook({ email, fullName });
 
       jsonResponse(res, 200, {
         ok: true,
-        attachment_ids: attachmentIds,
+        policy_attachment_id: policyAttachmentId,
+        evidence_attachment_ids: evidenceAttachmentIds,
         webhook: webhookResult,
       });
     } catch (error) {

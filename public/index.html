@@ -30,7 +30,7 @@
           <p class="eyebrow">Auto Insurance</p>
           <h1>Car Insurance Claim</h1>
           <p class="subhead">
-            Fill in your details, attach your evidence photos, and our claims team will process your request promptly.
+            Fill in your details, attach your policy certificate and evidence photos, and our claims team will process your request promptly.
           </p>
         </div>
       </header>
@@ -74,24 +74,34 @@
           />
         </label>
 
-        <label class="field">
-          <span>Policy Certificate Number</span>
-          <input
-            type="text"
-            name="policy_certificate"
-            autocomplete="off"
-            data-lpignore="true"
-            data-1p-ignore="true"
-            data-form-type="other"
-            data-bwignore="true"
-            required
-            placeholder="e.g. PLY-2024-123456"
-          />
-        </label>
+        <div class="field">
+          <span>Policy Certificate</span>
+          <label id="drop-zone-policy" class="drop-zone">
+            <input
+              id="policy_file"
+              name="policy_certificate"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              required
+            />
+            <div class="drop-content">
+              <div class="drop-icon">⇣</div>
+              <div>
+                <strong>Drag your policy certificate here</strong>
+                <p>or click to browse from your device</p>
+              </div>
+            </div>
+            <div class="file-meta">
+              <span id="policy-file-name">No file selected</span>
+              <span id="policy-file-size">—</span>
+            </div>
+          </label>
+          <p class="hint">Accepted formats: PDF, JPG or PNG.</p>
+        </div>
 
         <div class="field">
           <span>Evidence Photos</span>
-          <label id="drop-zone" class="drop-zone">
+          <label id="drop-zone-evidence" class="drop-zone">
             <input
               id="claim_file"
               name="claim_file"
@@ -108,8 +118,8 @@
               </div>
             </div>
             <div class="file-meta">
-              <span id="file-name">No photos selected</span>
-              <span id="file-size">—</span>
+              <span id="evidence-file-name">No photos selected</span>
+              <span id="evidence-file-size">—</span>
             </div>
           </label>
           <p class="hint">Accepted formats: JPG, PNG, HEIC or WebP. You may upload multiple photos.</p>
