@@ -36,8 +36,8 @@ Optional:
 Defaults currently in code (edit `server.mjs` or set env vars if you need to change the task metadata):
 
 - `BASE_URL`: `https://wonderful.app.demo.wonderful.ai`
-- `WEBHOOK_URL`: `https://api.demo.wonderful.ai/api/v1/tasks/webhook/39f0d424-c33a-40b8-b1ca-e82d6ee7d906`
-- `WEBHOOK_SECRET`: `517c4909-f2fb-45d3-8747-9f14ece0593b`
+- `WEBHOOK_URL`: `https://api.demo.wonderful.ai/api/v1/tasks/webhook/d691938b-81b4-44f3-b86a-ff827bd14f1b`
+- `WEBHOOK_SECRET`: `43c7b9ac-8d55-4a13-831f-cc7d57beede6`
 - `STORAGE_URL`: `https://api.demo.wonderful.ai/api/v1/storage`
 - `STORAGE_API_KEY`: `f2440f35-f26d-4145-8c15-295b40987ed6`
 - `task_type`: `process_application`
