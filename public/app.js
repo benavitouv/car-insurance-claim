@@ -7,6 +7,7 @@ const successClose = document.querySelector('#success-close');
 
 const policyFileInput = document.querySelector('#policy_file');
 const evidenceFileInput = document.querySelector('#claim_file');
+const evidencePreviewsEl = document.querySelector('#evidence-previews');
 
 const formatBytes = (bytes) => {
   if (!bytes) return '—';
@@ -15,6 +16,8 @@ const formatBytes = (bytes) => {
   const value = bytes / Math.pow(1024, exponent);
   return `${value.toFixed(value >= 10 || exponent === 0 ? 0 : 1)} ${units[exponent]}`;
 };
+
+// ── Policy drop zone (single file, simple) ───────────────────────────────────
 
 const setupDropZone = (dropZone, fileInput, fileNameEl, fileSizeEl, { multiple = false, emptyText = 'No file selected', onFilesChange = null } = {}) => {
   const updateMeta = (files) => {
@@ -42,9 +45,7 @@ const setupDropZone = (dropZone, fileInput, fileNameEl, fileSizeEl, { multiple =
   });
 
   ['dragleave', 'dragend', 'drop'].forEach((eventName) => {
-    dropZone.addEventListener(eventName, () => {
-      dropZone.classList.remove('is-dragover');
-    });
+    dropZone.addEventListener(eventName, () => dropZone.classList.remove('is-dragover'));
   });
 
   dropZone.addEventListener('drop', (event) => {
@@ -73,15 +74,38 @@ const updatePolicyMeta = setupDropZone(
   { multiple: false, emptyText: 'No file selected' }
 );
 
-const evidencePreviewsEl = document.querySelector('#evidence-previews');
+// ── Evidence drop zone (accumulative, with remove-per-photo) ─────────────────
+
+let evidenceFiles = [];
 let evidenceObjectURLs = [];
 
-const renderEvidencePreviews = (files) => {
+const syncEvidenceInput = () => {
+  const dataTransfer = new DataTransfer();
+  evidenceFiles.forEach((f) => dataTransfer.items.add(f));
+  evidenceFileInput.files = dataTransfer.files;
+};
+
+const updateEvidenceMeta = () => {
+  const fileNameEl = document.querySelector('#evidence-file-name');
+  const fileSizeEl = document.querySelector('#evidence-file-size');
+  if (evidenceFiles.length === 0) {
+    fileNameEl.textContent = 'No photos selected';
+    fileSizeEl.textContent = '—';
+  } else if (evidenceFiles.length === 1) {
+    fileNameEl.textContent = evidenceFiles[0].name;
+    fileSizeEl.textContent = formatBytes(evidenceFiles[0].size);
+  } else {
+    const totalSize = evidenceFiles.reduce((sum, f) => sum + f.size, 0);
+    fileNameEl.textContent = `${evidenceFiles.length} photos selected`;
+    fileSizeEl.textContent = formatBytes(totalSize);
+  }
+};
+
+const renderEvidencePreviews = () => {
   evidenceObjectURLs.forEach((url) => URL.revokeObjectURL(url));
   evidenceObjectURLs = [];
   evidencePreviewsEl.innerHTML = '';
-  if (!files || files.length === 0) return;
-  Array.from(files).forEach((file) => {
+  evidenceFiles.forEach((file, index) => {
     if (!file.type.startsWith('image/')) return;
     const url = URL.createObjectURL(file);
     evidenceObjectURLs.push(url);
@@ -90,18 +114,69 @@ const renderEvidencePreviews = (files) => {
     const img = document.createElement('img');
     img.src = url;
     img.alt = file.name;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'preview-remove';
+    btn.setAttribute('aria-label', `Remove ${file.name}`);
+    btn.textContent = '×';
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      evidenceFiles.splice(index, 1);
+      syncEvidenceInput();
+      updateEvidenceMeta();
+      renderEvidencePreviews();
+    });
     item.appendChild(img);
+    item.appendChild(btn);
     evidencePreviewsEl.appendChild(item);
   });
 };
 
-const updateEvidenceMeta = setupDropZone(
-  document.querySelector('#drop-zone-evidence'),
-  evidenceFileInput,
-  document.querySelector('#evidence-file-name'),
-  document.querySelector('#evidence-file-size'),
-  { multiple: true, emptyText: 'No photos selected', onFilesChange: renderEvidencePreviews }
-);
+const addEvidenceFiles = (newFiles) => {
+  Array.from(newFiles).forEach((f) => {
+    const isDup = evidenceFiles.some(
+      (ef) => ef.name === f.name && ef.size === f.size && ef.lastModified === f.lastModified
+    );
+    if (!isDup) evidenceFiles.push(f);
+  });
+  syncEvidenceInput();
+  updateEvidenceMeta();
+  renderEvidencePreviews();
+};
+
+const clearEvidenceFiles = () => {
+  evidenceFiles = [];
+  syncEvidenceInput();
+  updateEvidenceMeta();
+  renderEvidencePreviews();
+};
+
+// Accumulate on native file picker selection
+evidenceFileInput.addEventListener('change', () => {
+  if (evidenceFileInput.files.length > 0) addEvidenceFiles(evidenceFileInput.files);
+});
+
+const evidenceDropZone = document.querySelector('#drop-zone-evidence');
+
+['dragenter', 'dragover'].forEach((eventName) => {
+  evidenceDropZone.addEventListener(eventName, (event) => {
+    event.preventDefault();
+    evidenceDropZone.classList.add('is-dragover');
+  });
+});
+
+['dragleave', 'dragend', 'drop'].forEach((eventName) => {
+  evidenceDropZone.addEventListener(eventName, () => evidenceDropZone.classList.remove('is-dragover'));
+});
+
+evidenceDropZone.addEventListener('drop', (event) => {
+  event.preventDefault();
+  const dropped = event.dataTransfer?.files;
+  if (dropped && dropped.length > 0) addEvidenceFiles(dropped);
+});
+
+// ── Status & modal ────────────────────────────────────────────────────────────
 
 const setStatus = (type, message) => {
   statusEl.dataset.type = type;
@@ -118,20 +193,19 @@ const hideSuccessModal = () => {
   successModal.setAttribute('aria-hidden', 'true');
 };
 
+// ── Submit ────────────────────────────────────────────────────────────────────
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   setStatus('', '');
   hideSuccessModal();
 
-  const policyFiles = policyFileInput.files;
-  const evidenceFiles = evidenceFileInput.files;
-
-  if (!policyFiles || policyFiles.length === 0) {
+  if (!policyFileInput.files || policyFileInput.files.length === 0) {
     setStatus('error', 'Please attach your policy certificate before submitting.');
     return;
   }
 
-  if (!evidenceFiles || evidenceFiles.length === 0) {
+  if (evidenceFiles.length === 0) {
     setStatus('error', 'Please attach at least one evidence photo before submitting.');
     return;
   }
@@ -143,7 +217,7 @@ form.addEventListener('submit', async (event) => {
   try {
     const formData = new FormData(form);
     formData.delete('claim_file');
-    Array.from(evidenceFiles).forEach((f) => formData.append('claim_file', f));
+    evidenceFiles.forEach((f) => formData.append('claim_file', f));
 
     const response = await fetch('/api/submit', {
       method: 'POST',
@@ -159,7 +233,7 @@ form.addEventListener('submit', async (event) => {
     setStatus('success', 'Claim submitted successfully! Our claims team will be in touch shortly.');
     form.reset();
     updatePolicyMeta(null);
-    updateEvidenceMeta(null);
+    clearEvidenceFiles();
     showSuccessModal();
   } catch (error) {
     setStatus('error', error instanceof Error ? error.message : 'An unexpected error occurred.');
