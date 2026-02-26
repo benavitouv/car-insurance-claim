@@ -13,10 +13,6 @@ const getEnv = (name, fallback) => {
   return value;
 };
 
-const BASE_URL = process.env.BASE_URL || 'https://wonderful.app.demo.wonderful.ai';
-const API_BASE_URL =
-  process.env.API_BASE_URL || BASE_URL.replace('wonderful.app', 'api');
-
 const WEBHOOK_URL = getEnv(
   'WEBHOOK_URL',
   'https://api.demo.wonderful.ai/api/v1/tasks/webhook/d691938b-81b4-44f3-b86a-ff827bd14f1b'
@@ -24,11 +20,6 @@ const WEBHOOK_URL = getEnv(
 const WEBHOOK_SECRET = getEnv(
   'WEBHOOK_SECRET',
   '43c7b9ac-8d55-4a13-831f-cc7d57beede6'
-);
-const STORAGE_URL = getEnv('STORAGE_URL', `${API_BASE_URL}/api/v1/storage`);
-const STORAGE_API_KEY = getEnv(
-  'STORAGE_API_KEY',
-  'f2440f35-f26d-4145-8c15-295b40987ed6'
 );
 const TASK_TYPE = process.env.TASK_TYPE || 'process_claim';
 const TRIGGER_ID =
@@ -43,6 +34,7 @@ const CONTENT_TYPES = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
+  '.pdf': 'application/pdf',
   '.ico': 'image/x-icon',
 };
 
@@ -53,62 +45,6 @@ const jsonResponse = (res, statusCode, payload) => {
     'Content-Length': Buffer.byteLength(body),
   });
   res.end(body);
-};
-
-const readBodyAsFormData = async (req, url) => {
-  const request = new Request(url, {
-    method: req.method,
-    headers: req.headers,
-    body: req,
-    duplex: 'half',
-  });
-  return request.formData();
-};
-
-const uploadAttachment = async (file) => {
-  const contentType = file.type || 'application/octet-stream';
-  const filename = file.name || 'insurance-claim-photo';
-
-  const storageResponse = await fetch(STORAGE_URL, {
-    method: 'POST',
-    headers: {
-      'X-API-Key': STORAGE_API_KEY,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      filename,
-      contentType,
-    }),
-  });
-
-  if (!storageResponse.ok) {
-    const text = await storageResponse.text();
-    throw new Error(`Storage init failed (${storageResponse.status}): ${text}`);
-  }
-
-  const storageJson = await storageResponse.json();
-  const attachmentId = storageJson?.data?.id;
-  const uploadUrl = storageJson?.data?.url;
-
-  if (!attachmentId || !uploadUrl) {
-    throw new Error('Storage response missing attachment id or upload url');
-  }
-
-  const fileBuffer = Buffer.from(await file.arrayBuffer());
-  const uploadResponse = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': contentType,
-    },
-    body: fileBuffer,
-  });
-
-  if (!uploadResponse.ok) {
-    const text = await uploadResponse.text();
-    throw new Error(`Upload failed (${uploadResponse.status}): ${text}`);
-  }
-
-  return attachmentId;
 };
 
 const triggerWebhook = async ({ email, fullName }) => {
@@ -167,13 +103,18 @@ const server = createServer(async (req, res) => {
 
   if (req.method === 'POST' && url.pathname === '/api/submit') {
     try {
-      const formData = await readBodyAsFormData(req, url);
-      const fullName = String(formData.get('full_name') || '').trim();
-      const email = String(formData.get('email') || '').trim();
-      const policyFile = formData.get('policy_certificate');
-      const evidenceFiles = formData.getAll('claim_file').filter((f) => typeof f !== 'string');
+      const body = await new Promise((resolve, reject) => {
+        let data = '';
+        req.on('data', (chunk) => { data += chunk; });
+        req.on('end', () => resolve(data));
+        req.on('error', reject);
+      });
 
-      if (!fullName || !email) {
+      const { full_name, email } = JSON.parse(body);
+      const fullName = String(full_name || '').trim();
+      const emailValue = String(email || '').trim();
+
+      if (!fullName || !emailValue) {
         jsonResponse(res, 400, {
           ok: false,
           error: 'missing_fields',
@@ -182,36 +123,8 @@ const server = createServer(async (req, res) => {
         return;
       }
 
-      if (!policyFile || typeof policyFile === 'string') {
-        jsonResponse(res, 400, {
-          ok: false,
-          error: 'missing_policy',
-          message: 'Please attach your policy certificate.',
-        });
-        return;
-      }
-
-      if (evidenceFiles.length === 0) {
-        jsonResponse(res, 400, {
-          ok: false,
-          error: 'missing_evidence',
-          message: 'Please attach at least one evidence photo.',
-        });
-        return;
-      }
-
-      const [policyAttachmentId, ...evidenceAttachmentIds] = await Promise.all([
-        uploadAttachment(policyFile),
-        ...evidenceFiles.map((f) => uploadAttachment(f)),
-      ]);
-      const webhookResult = await triggerWebhook({ email, fullName });
-
-      jsonResponse(res, 200, {
-        ok: true,
-        policy_attachment_id: policyAttachmentId,
-        evidence_attachment_ids: evidenceAttachmentIds,
-        webhook: webhookResult,
-      });
+      const webhookResult = await triggerWebhook({ email: emailValue, fullName });
+      jsonResponse(res, 200, { ok: true, webhook: webhookResult });
     } catch (error) {
       jsonResponse(res, 500, {
         ok: false,
